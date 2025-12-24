@@ -11,7 +11,7 @@ const SERVICES = {
     rating: 4.8,
     desc: "Professional care for your little ones while you are away.",
     longDesc:
-      "Our verified babysitters provide attentive, engaging, and safe care for children of all ages. [cite: 3]",
+      "Our verified babysitters provide attentive, engaging, and safe care for children of all ages.",
     features: [
       "Certified Caregivers",
       "Background Checked",
@@ -27,7 +27,7 @@ const SERVICES = {
     rating: 4.9,
     desc: "Compassionate support for seniors.",
     longDesc:
-      "We provide respectful and dignified care for seniors. Assist with daily living and companionship. [cite: 3]",
+      "We provide respectful and dignified care for seniors. Assist with daily living and companionship.",
     features: [
       "Medication Reminders",
       "Mobility Assistance",
@@ -43,7 +43,7 @@ const SERVICES = {
     rating: 4.7,
     desc: "Dedicated attention for those recovering from illness.",
     longDesc:
-      "Specialized care for patients recovering from surgery or managing chronic illnesses. [cite: 3]",
+      "Specialized care for patients recovering from surgery or managing chronic illnesses.",
     features: [
       "Vitals Monitoring",
       "Post-Op Care",

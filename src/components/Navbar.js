@@ -1,15 +1,18 @@
 "use client";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useState } from "react";
-import { useAuth } from "@/lib/authContext";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/authContext";
+import { db } from "@/lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
 import {
   FaBars,
   FaTimes,
   FaUserCircle,
   FaSignOutAlt,
   FaCalendarAlt,
+  FaShieldAlt,
 } from "react-icons/fa";
 
 export default function Navbar() {
@@ -17,14 +20,38 @@ export default function Navbar() {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [dbImg, setDbImg] = useState(null);
+
+  useEffect(() => {
+    const checkUser = async () => {
+      if (user) {
+        try {
+          const d = await getDoc(doc(db, "users", user.uid));
+          if (d.exists()) {
+            const data = d.data();
+            setIsAdmin(data.role === "admin");
+            setDbImg(data.img);
+          }
+        } catch (err) {
+          console.log("Sync...");
+        }
+      } else {
+        setIsAdmin(false);
+        setDbImg(null);
+      }
+    };
+    checkUser();
+  }, [user]);
 
   const handleLogout = async () => {
     try {
       await logout();
       setShowProfileMenu(false);
+      setIsAdmin(false);
       router.push("/login");
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.log(err);
     }
   };
 
@@ -44,30 +71,42 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-8">
             <Link
               href="/"
-              className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-white transition-colors"
+              className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-purple-600 transition-colors"
             >
               Home
             </Link>
-            <Link
-              href="/service/all"
-              className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-white transition-colors"
-            >
-              Services
-            </Link>
+
+            {!isAdmin && (
+              <Link
+                href="/service/all"
+                className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-purple-600 transition-colors"
+              >
+                Services
+              </Link>
+            )}
+
+            {user && isAdmin && (
+              <Link
+                href="/admin"
+                className="text-sm font-bold text-purple-600 flex items-center gap-2"
+              >
+                <FaShieldAlt /> Admin Panel
+              </Link>
+            )}
 
             {user ? (
               <div className="relative">
                 <button
                   onClick={() => setShowProfileMenu(!showProfileMenu)}
-                  className="flex items-center gap-3 pl-2 pr-4 py-1.5 rounded-full border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 transition-all"
+                  className="flex items-center gap-3 pl-2 pr-4 py-1.5 rounded-full border border-gray-200 dark:border-white/10 hover:bg-gray-50 transition-all"
                 >
                   <div className="relative w-8 h-8 rounded-full overflow-hidden">
-                    {user.photoURL ? (
+                    {dbImg || user.photoURL ? (
                       <Image
-                        src={user.photoURL}
-                        alt="Profile"
+                        src={dbImg || user.photoURL}
+                        alt="Avatar"
                         fill
-                        sizes="32px" // ADDED: Fixes the performance warning
+                        sizes="32px"
                         className="object-cover"
                       />
                     ) : (
@@ -82,27 +121,25 @@ export default function Navbar() {
                 </button>
 
                 {showProfileMenu && (
-                  <div className="absolute right-0 mt-3 w-56 bg-white dark:bg-[#0a0c1a] rounded-xl shadow-xl border border-gray-100 dark:border-white/10 py-2 animate-in fade-in slide-in-from-top-2">
-                    <div className="px-4 py-3 border-b border-gray-100 dark:border-white/5 mb-2">
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Signed in as
-                      </p>
-                      <p className="text-sm font-bold text-gray-900 dark:text-white truncate">
-                        {user.email}
-                      </p>
+                  <div className="absolute right-0 mt-3 w-56 bg-white dark:bg-[#0a0c1a] rounded-xl shadow-xl border border-gray-100 py-2">
+                    <div className="px-4 py-3 border-b mb-2">
+                      <p className="text-xs text-gray-500">Signed in as</p>
+                      <p className="text-sm font-bold truncate">{user.email}</p>
                     </div>
 
-                    <Link
-                      href="/my-bookings"
-                      onClick={() => setShowProfileMenu(false)}
-                      className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-white/5 hover:text-purple-600 transition-colors"
-                    >
-                      <FaCalendarAlt /> My Bookings
-                    </Link>
+                    {!isAdmin && (
+                      <Link
+                        href="/my-bookings"
+                        onClick={() => setShowProfileMenu(false)}
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600"
+                      >
+                        <FaCalendarAlt /> My Bookings
+                      </Link>
+                    )}
 
                     <button
                       onClick={handleLogout}
-                      className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                      className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                     >
                       <FaSignOutAlt /> Sign Out
                     </button>
@@ -112,7 +149,7 @@ export default function Navbar() {
             ) : (
               <Link
                 href="/login"
-                className="px-6 py-2.5 bg-purple-600 text-white rounded-full font-medium hover:bg-purple-700 transition-all shadow-lg shadow-purple-600/20 hover:shadow-purple-600/40"
+                className="px-6 py-2.5 bg-purple-600 text-white rounded-full font-medium hover:bg-purple-700 shadow-lg"
               >
                 Login
               </Link>
@@ -121,7 +158,7 @@ export default function Navbar() {
 
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden p-2 text-gray-600 dark:text-gray-300"
+            className="md:hidden p-2 text-gray-600"
           >
             {isOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
           </button>
@@ -129,35 +166,50 @@ export default function Navbar() {
       </div>
 
       {isOpen && (
-        <div className="md:hidden bg-white dark:bg-[#020410] border-t border-gray-100 dark:border-white/5">
+        <div className="md:hidden bg-white dark:bg-[#020410] border-t border-gray-100">
           <div className="px-4 pt-4 pb-8 space-y-4">
             <Link
               href="/"
               onClick={() => setIsOpen(false)}
-              className="block px-4 py-3 rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 text-gray-600 dark:text-gray-300 font-medium"
+              className="block px-4 py-3 rounded-xl text-gray-600 font-medium"
             >
               Home
             </Link>
-            <Link
-              href="/service/all"
-              onClick={() => setIsOpen(false)}
-              className="block px-4 py-3 rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 text-gray-600 dark:text-gray-300 font-medium"
-            >
-              Services
-            </Link>
+
+            {!isAdmin && (
+              <Link
+                href="/service/all"
+                onClick={() => setIsOpen(false)}
+                className="block px-4 py-3 rounded-xl text-gray-600 font-medium"
+              >
+                Services
+              </Link>
+            )}
+
+            {user && isAdmin && (
+              <Link
+                href="/admin"
+                onClick={() => setIsOpen(false)}
+                className="block px-4 py-3 rounded-xl text-purple-600 font-bold"
+              >
+                Admin Panel
+              </Link>
+            )}
 
             {user ? (
               <>
-                <Link
-                  href="/my-bookings"
-                  onClick={() => setIsOpen(false)}
-                  className="block px-4 py-3 rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 text-gray-600 dark:text-gray-300 font-medium"
-                >
-                  My Bookings
-                </Link>
+                {!isAdmin && (
+                  <Link
+                    href="/my-bookings"
+                    onClick={() => setIsOpen(false)}
+                    className="block px-4 py-3 rounded-xl text-gray-600 font-medium"
+                  >
+                    My Bookings
+                  </Link>
+                )}
                 <button
                   onClick={handleLogout}
-                  className="w-full text-left px-4 py-3 rounded-xl bg-red-50 dark:bg-red-900/10 text-red-600 font-medium"
+                  className="w-full text-left px-4 py-3 rounded-xl bg-red-50 text-red-600 font-medium"
                 >
                   Sign Out
                 </button>

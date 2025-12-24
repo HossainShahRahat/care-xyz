@@ -1,177 +1,170 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { useAuth } from "@/lib/authContext";
-import { db } from "@/lib/firebase";
-import { doc, setDoc } from "firebase/firestore";
-import { useForm } from "react-hook-form";
+import { auth, db, googleProvider } from "@/lib/firebase";
 import {
-  FaUser,
-  FaEnvelope,
-  FaLock,
-  FaIdCard,
-  FaPhone,
-  FaExclamationCircle,
-} from "react-icons/fa";
+  createUserWithEmailAndPassword,
+  updateProfile,
+  signInWithPopup,
+} from "firebase/auth";
+import { doc, setDoc, getDoc } from "firebase/firestore";
+import { useRouter } from "next/navigation";
+import { FaGoogle } from "react-icons/fa";
+import Link from "next/link";
 
-export default function RegisterPage() {
-  const { signup } = useAuth();
-  const router = useRouter();
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm();
-
-  const [error, setError] = useState("");
+export default function Register() {
+  const [role, setRole] = useState("user");
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
-  const handleRegister = async (data) => {
-    setError("");
-    setLoading(true);
-
-    const hasUpper = /[A-Z]/.test(data.password);
-    const hasLower = /[a-z]/.test(data.password);
-
-    if (data.password.length < 6 || !hasUpper || !hasLower) {
-      setError("Password must be 6+ chars with uppercase & lowercase");
-      setLoading(false);
-      return;
-    }
-
+  const handleGoogle = async () => {
     try {
-      const res = await signup(data.email, data.password, data.name);
+      const res = await signInWithPopup(auth, googleProvider);
+      const u = res.user;
+      const userRef = doc(db, "users", u.uid);
+      const snap = await getDoc(userRef);
 
-      await setDoc(doc(db, "users", res.user.uid), {
-        uid: res.user.uid,
-        name: data.name,
-        email: data.email,
-        nid: data.nid,
-        contact: data.contact,
-        createdAt: new Date(),
-        role: "user",
-      });
-
-      router.push("/my-bookings");
-    } catch (err) {
-      if (err.code === "auth/email-already-in-use") {
-        setError("Email already exists");
-      } else {
-        setError("Failed to create account");
+      if (!snap.exists()) {
+        await setDoc(userRef, {
+          uid: u.uid,
+          name: u.displayName,
+          email: u.email,
+          role: role,
+          img: u.photoURL,
+          createdAt: new Date(),
+        });
       }
-    } finally {
-      setLoading(false);
+
+      router.push(role === "admin" ? "/admin" : "/");
+    } catch (err) {
+      console.log(err);
     }
   };
 
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    const { name, email, password, photoUrl } = e.target.elements;
+
+    try {
+      const res = await createUserWithEmailAndPassword(
+        auth,
+        email.value,
+        password.value
+      );
+
+      await updateProfile(res.user, {
+        displayName: name.value,
+        photoURL: photoUrl.value,
+      });
+
+      await setDoc(doc(db, "users", res.user.uid), {
+        uid: res.user.uid,
+        name: name.value,
+        email: email.value,
+        role: role,
+        img: photoUrl.value,
+        createdAt: new Date(),
+      });
+
+      router.push(role === "admin" ? "/admin" : "/");
+    } catch (err) {
+      console.log(err);
+    }
+    setLoading(false);
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#020410] px-4 py-12">
-      <div className="max-w-md w-full bg-white dark:bg-[#0a0c1a] p-8 rounded-2xl shadow-xl border border-gray-100 dark:border-white/5">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Create Account
-          </h2>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-            Join Care.xyz to find trusted caregivers
-          </p>
+    <div className="max-w-md mx-auto mt-20 p-8 bg-white dark:bg-[#0a0c1a] rounded-2xl shadow-xl border border-gray-100 dark:border-white/5">
+      <h2 className="text-2xl font-bold mb-6 text-center">Create Account</h2>
+
+      <div className="flex gap-4 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl mb-6">
+        <button
+          type="button"
+          onClick={() => setRole("user")}
+          className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${
+            role === "user"
+              ? "bg-white dark:bg-gray-700 shadow-sm"
+              : "text-gray-500"
+          }`}
+        >
+          User
+        </button>
+        <button
+          type="button"
+          onClick={() => setRole("admin")}
+          className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${
+            role === "admin"
+              ? "bg-purple-600 text-white shadow-sm"
+              : "text-gray-500"
+          }`}
+        >
+          Admin
+        </button>
+      </div>
+
+      <button
+        type="button"
+        onClick={handleGoogle}
+        className="w-full mb-6 py-3 flex items-center justify-center gap-3 border border-gray-200 dark:border-gray-700 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-white/5 transition-all"
+      >
+        <FaGoogle className="text-red-500" /> Continue as {role} with Google
+      </button>
+
+      <div className="relative mb-6">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-gray-200 dark:border-gray-800"></span>
         </div>
-
-        {error && (
-          <div className="mb-6 bg-red-50 dark:bg-red-900/20 text-red-600 p-3 rounded-lg flex items-center gap-2 text-sm">
-            <FaExclamationCircle className="flex-shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
-
-        <form className="space-y-5" onSubmit={handleSubmit(handleRegister)}>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-              <FaUser />
-            </div>
-            <input
-              {...register("name", { required: true })}
-              type="text"
-              placeholder="Full Name"
-              className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-purple-600 outline-none bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-all placeholder-gray-400"
-            />
-          </div>
-
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-              <FaEnvelope />
-            </div>
-            <input
-              {...register("email", { required: true })}
-              type="email"
-              placeholder="Email Address"
-              className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-purple-600 outline-none bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-all placeholder-gray-400"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                <FaIdCard />
-              </div>
-              <input
-                {...register("nid", { required: true })}
-                type="text"
-                placeholder="NID Number"
-                className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-purple-600 outline-none bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-all placeholder-gray-400"
-              />
-            </div>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                <FaPhone />
-              </div>
-              <input
-                {...register("contact", { required: true })}
-                type="tel"
-                placeholder="Contact No"
-                className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-purple-600 outline-none bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-all placeholder-gray-400"
-              />
-            </div>
-          </div>
-
-          <div>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                <FaLock />
-              </div>
-              <input
-                {...register("password", { required: true })}
-                type="password"
-                placeholder="Password"
-                className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-purple-600 outline-none bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-all placeholder-gray-400"
-              />
-            </div>
-            <p className="text-xs text-gray-500 mt-1.5 ml-1">
-              * Must include 1 uppercase & 1 lowercase letter (min 6 chars)
-            </p>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 px-4 bg-purple-600 text-white font-bold rounded-xl shadow-lg shadow-purple-600/30 hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 transition-all disabled:opacity-70 disabled:cursor-not-allowed mt-2"
-          >
-            {loading ? "Creating Account..." : "Sign Up"}
-          </button>
-        </form>
-
-        <div className="text-center mt-6">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Already have an account?{" "}
-            <Link
-              href="/login"
-              className="font-medium text-purple-600 hover:text-purple-500 transition-colors"
-            >
-              Log in
-            </Link>
-          </p>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-white dark:bg-[#0a0c1a] px-2 text-gray-500">
+            Or use email
+          </span>
         </div>
       </div>
+
+      <form onSubmit={handleRegister} className="space-y-4">
+        <input
+          name="name"
+          placeholder="Full Name"
+          required
+          className="w-full p-3 rounded-xl border dark:bg-gray-900 dark:border-gray-700"
+        />
+        <input
+          name="email"
+          type="email"
+          placeholder="Email"
+          required
+          className="w-full p-3 rounded-xl border dark:bg-gray-900 dark:border-gray-700"
+        />
+        <input
+          name="password"
+          type="password"
+          placeholder="Password"
+          required
+          className="w-full p-3 rounded-xl border dark:bg-gray-900 dark:border-gray-700"
+        />
+        <input
+          name="photoUrl"
+          placeholder="Profile Image URL"
+          className="w-full p-3 rounded-xl border dark:bg-gray-900 dark:border-gray-700"
+        />
+
+        <button
+          disabled={loading}
+          className="w-full py-3 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-700 transition-all"
+        >
+          {loading ? "Creating Account..." : `Register as ${role}`}
+        </button>
+      </form>
+
+      <p className="mt-6 text-center text-sm text-gray-500">
+        Already have an account?{" "}
+        <Link
+          href="/login"
+          className="text-purple-600 font-bold hover:underline"
+        >
+          Login here
+        </Link>
+      </p>
     </div>
   );
 }
