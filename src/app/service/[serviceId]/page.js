@@ -9,9 +9,9 @@ const SERVICES = {
     title: "Baby Sitting",
     price: 500,
     rating: 4.8,
-    desc: "Professional care for your little ones while you are away. Safe, fun, and educational.",
+    desc: "Professional care for your little ones while you are away.",
     longDesc:
-      "Our verified babysitters provide attentive, engaging, and safe care for children of all ages. Whether you need a few hours for a date night or regular daily assistance, our professionals are trained in child safety, first aid, and age-appropriate activities.",
+      "Our verified babysitters provide attentive, engaging, and safe care for children of all ages. [cite: 3]",
     features: [
       "Certified Caregivers",
       "Background Checked",
@@ -25,9 +25,9 @@ const SERVICES = {
     title: "Elderly Care",
     price: 400,
     rating: 4.9,
-    desc: "Compassionate support for seniors. Companionship, medication reminders, and daily assistance.",
+    desc: "Compassionate support for seniors.",
     longDesc:
-      "We provide respectful and dignified care for seniors. Our caregivers assist with daily living activities, medication management, and provide meaningful companionship to combat loneliness and ensure safety at home.",
+      "We provide respectful and dignified care for seniors. Assist with daily living and companionship. [cite: 3]",
     features: [
       "Medication Reminders",
       "Mobility Assistance",
@@ -41,9 +41,9 @@ const SERVICES = {
     title: "Sick People Service",
     price: 600,
     rating: 4.7,
-    desc: "Dedicated attention for those recovering from illness. Monitoring and assistance with comfort.",
+    desc: "Dedicated attention for those recovering from illness.",
     longDesc:
-      "Specialized care for patients recovering from surgery or managing chronic illnesses. Our team monitors vitals, ensures comfort, and assists with recovery plans prescribed by healthcare professionals.",
+      "Specialized care for patients recovering from surgery or managing chronic illnesses. [cite: 3]",
     features: [
       "Vitals Monitoring",
       "Post-Op Care",
@@ -100,7 +100,6 @@ export default async function ServiceDetails({ params }) {
               <p className="text-lg text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
                 {service.longDesc}
               </p>
-
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
                 {service.features.map((item, i) => (
                   <div
@@ -112,7 +111,6 @@ export default async function ServiceDetails({ params }) {
                   </div>
                 ))}
               </div>
-
               <div className="mt-auto pt-8 border-t border-gray-100 dark:border-white/10 flex flex-col sm:flex-row items-center justify-between gap-6">
                 <div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -125,7 +123,6 @@ export default async function ServiceDetails({ params }) {
                     </span>
                   </p>
                 </div>
-
                 <BookingAction serviceId={service.id} />
               </div>
             </div>
