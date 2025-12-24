@@ -1,131 +1,179 @@
 "use client";
 import Link from "next/link";
-import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { useState } from "react";
+import { useAuth } from "@/lib/authContext";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import {
+  FaBars,
+  FaTimes,
+  FaUserCircle,
+  FaSignOutAlt,
+  FaCalendarAlt,
+} from "react-icons/fa";
 
-const Navbar = () => {
+export default function Navbar() {
+  const { user, logout } = useAuth();
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const pathname = usePathname();
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 10);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  const navLinks = [
-    { name: "Home", href: "/" },
-    { name: "Services", href: "/service/all" },
-    { name: "My Bookings", href: "/my-bookings" },
-  ];
-
-  const isActive = (path) => pathname === path;
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setShowProfileMenu(false);
+      router.push("/login");
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   return (
-    <nav
-      className={`fixed top-0 w-full z-[100] transition-all duration-300 ${
-        scrolled
-          ? "bg-white/80 dark:bg-[#020410]/80 backdrop-blur-xl border-b border-gray-200 dark:border-white/10 shadow-lg shadow-gray-200/20 dark:shadow-purple-900/10 py-2"
-          : "bg-transparent py-4"
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-6 md:px-12">
-        <div className="flex justify-between items-center h-16">
-          <div className="flex-shrink-0 flex items-center">
+    <nav className="fixed w-full z-50 bg-white/80 dark:bg-[#020410]/80 backdrop-blur-md border-b border-gray-100 dark:border-white/5">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-20">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="w-10 h-10 bg-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-xl">
+              C
+            </div>
+            <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-500">
+              Care.xyz
+            </span>
+          </Link>
+
+          <div className="hidden md:flex items-center gap-8">
             <Link
               href="/"
-              className="text-3xl font-extrabold text-purple-600 dark:text-purple-400 tracking-tighter hover:opacity-80 transition-opacity"
+              className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-white transition-colors"
             >
-              Care.xyz
+              Home
             </Link>
-          </div>
-
-          <div className="hidden md:flex items-center gap-10">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                href={link.href}
-                className={`text-sm font-semibold tracking-wide transition-colors duration-200 ${
-                  isActive(link.href)
-                    ? "text-purple-600 dark:text-purple-400"
-                    : "text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400"
-                }`}
-              >
-                {link.name}
-              </Link>
-            ))}
             <Link
-              href="/login"
-              className="px-8 py-3 rounded-full bg-purple-600 text-white hover:bg-purple-700 transition-all shadow-lg shadow-purple-600/30 text-sm font-bold transform hover:-translate-y-0.5 active:scale-95"
+              href="/service/all"
+              className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-white transition-colors"
             >
-              Login
+              Services
             </Link>
+
+            {user ? (
+              <div className="relative">
+                <button
+                  onClick={() => setShowProfileMenu(!showProfileMenu)}
+                  className="flex items-center gap-3 pl-2 pr-4 py-1.5 rounded-full border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 transition-all"
+                >
+                  <div className="relative w-8 h-8 rounded-full overflow-hidden">
+                    {user.photoURL ? (
+                      <Image
+                        src={user.photoURL}
+                        alt="Profile"
+                        fill
+                        sizes="32px" // ADDED: Fixes the performance warning
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-purple-100 flex items-center justify-center text-purple-600">
+                        <FaUserCircle size={20} />
+                      </div>
+                    )}
+                  </div>
+                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-200 max-w-[100px] truncate">
+                    {user.displayName || "User"}
+                  </span>
+                </button>
+
+                {showProfileMenu && (
+                  <div className="absolute right-0 mt-3 w-56 bg-white dark:bg-[#0a0c1a] rounded-xl shadow-xl border border-gray-100 dark:border-white/10 py-2 animate-in fade-in slide-in-from-top-2">
+                    <div className="px-4 py-3 border-b border-gray-100 dark:border-white/5 mb-2">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Signed in as
+                      </p>
+                      <p className="text-sm font-bold text-gray-900 dark:text-white truncate">
+                        {user.email}
+                      </p>
+                    </div>
+
+                    <Link
+                      href="/my-bookings"
+                      onClick={() => setShowProfileMenu(false)}
+                      className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-white/5 hover:text-purple-600 transition-colors"
+                    >
+                      <FaCalendarAlt /> My Bookings
+                    </Link>
+
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                    >
+                      <FaSignOutAlt /> Sign Out
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="px-6 py-2.5 bg-purple-600 text-white rounded-full font-medium hover:bg-purple-700 transition-all shadow-lg shadow-purple-600/20 hover:shadow-purple-600/40"
+              >
+                Login
+              </Link>
+            )}
           </div>
 
-          <div className="flex md:hidden">
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="text-gray-600 dark:text-white hover:text-purple-600 focus:outline-none p-2"
-            >
-              <svg
-                className="h-7 w-7"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                {isOpen ? (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                ) : (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                )}
-              </svg>
-            </button>
-          </div>
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="md:hidden p-2 text-gray-600 dark:text-gray-300"
+          >
+            {isOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
+          </button>
         </div>
       </div>
 
       {isOpen && (
-        <div className="md:hidden bg-white dark:bg-[#020410] border-t border-gray-100 dark:border-white/10 shadow-2xl absolute w-full left-0 top-full">
-          <div className="px-6 py-6 space-y-3">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                href={link.href}
-                onClick={() => setIsOpen(false)}
-                className={`block px-4 py-4 rounded-xl text-base font-semibold ${
-                  isActive(link.href)
-                    ? "text-purple-600 bg-purple-50 dark:bg-white/5 dark:text-purple-300"
-                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5"
-                }`}
-              >
-                {link.name}
-              </Link>
-            ))}
-            <div className="pt-4">
+        <div className="md:hidden bg-white dark:bg-[#020410] border-t border-gray-100 dark:border-white/5">
+          <div className="px-4 pt-4 pb-8 space-y-4">
+            <Link
+              href="/"
+              onClick={() => setIsOpen(false)}
+              className="block px-4 py-3 rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 text-gray-600 dark:text-gray-300 font-medium"
+            >
+              Home
+            </Link>
+            <Link
+              href="/service/all"
+              onClick={() => setIsOpen(false)}
+              className="block px-4 py-3 rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 text-gray-600 dark:text-gray-300 font-medium"
+            >
+              Services
+            </Link>
+
+            {user ? (
+              <>
+                <Link
+                  href="/my-bookings"
+                  onClick={() => setIsOpen(false)}
+                  className="block px-4 py-3 rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 text-gray-600 dark:text-gray-300 font-medium"
+                >
+                  My Bookings
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left px-4 py-3 rounded-xl bg-red-50 dark:bg-red-900/10 text-red-600 font-medium"
+                >
+                  Sign Out
+                </button>
+              </>
+            ) : (
               <Link
                 href="/login"
                 onClick={() => setIsOpen(false)}
-                className="block w-full text-center px-5 py-4 rounded-xl bg-purple-600 text-white font-bold hover:bg-purple-700 shadow-xl shadow-purple-600/20"
+                className="block text-center px-4 py-3 bg-purple-600 text-white rounded-xl font-bold"
               >
-                Login / Register
+                Login
               </Link>
-            </div>
+            )}
           </div>
         </div>
       )}
     </nav>
   );
-};
-
-export default Navbar;
+}

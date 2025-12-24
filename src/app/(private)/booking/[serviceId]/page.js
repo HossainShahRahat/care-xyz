@@ -1,15 +1,18 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
 import { useAuth } from "@/lib/authContext";
 import { useForm } from "react-hook-form";
 import {
   FaMapMarkerAlt,
   FaClock,
-  FaCalculator,
+  FaCalculator, // FIXED: Added this missing import
   FaCheckCircle,
+  FaExclamationTriangle,
 } from "react-icons/fa";
+import { db } from "@/lib/firebase";
+import { collection, addDoc } from "firebase/firestore";
 
 const servicesData = {
   "baby-care": {
@@ -35,9 +38,10 @@ const servicesData = {
   },
 };
 
-export default function BookingPage({ params }) {
+export default function BookingPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const params = useParams();
   const {
     register,
     handleSubmit,
@@ -45,9 +49,10 @@ export default function BookingPage({ params }) {
     formState: { errors },
   } = useForm();
   const [totalCost, setTotalCost] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const serviceId = params.serviceId;
-  const service = servicesData[serviceId];
+  const serviceId = params?.serviceId;
+  const service = serviceId ? servicesData[serviceId] : null;
 
   const duration = watch("duration");
 
@@ -65,25 +70,56 @@ export default function BookingPage({ params }) {
     }
   }, [duration, service]);
 
-  const onSubmit = (data) => {
-    const bookingData = {
-      ...data,
-      serviceId,
-      serviceName: service.title,
-      totalCost,
-      status: "Pending",
-      userEmail: user.email,
-      bookingDate: new Date().toISOString(),
-    };
+  const onSubmit = async (data) => {
+    setIsSubmitting(true);
+    try {
+      const newBooking = {
+        serviceId,
+        serviceName: service.title,
+        serviceImage: service.image,
+        totalCost,
+        status: "Pending",
+        userEmail: user.email,
+        userName: user.displayName,
+        bookingDate: new Date().toLocaleDateString(),
+        createdAt: new Date(),
+        ...data,
+      };
 
-    console.log("Booking Saved:", bookingData);
-    router.push("/my-bookings");
+      await addDoc(collection(db, "bookings"), newBooking);
+
+      router.push("/my-bookings");
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  if (loading || !service) {
+  if (loading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-600"></div>
+      </div>
+    );
+  }
+
+  if (!service) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-4">
+        <FaExclamationTriangle className="text-5xl text-yellow-500 mb-4" />
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+          Service Not Found
+        </h2>
+        <p className="text-gray-600 dark:text-gray-400 mb-6">
+          We couldn't find the service you are looking for.
+        </p>
+        <button
+          onClick={() => router.push("/service/all")}
+          className="px-6 py-3 bg-purple-600 text-white rounded-full font-bold hover:bg-purple-700 transition-all"
+        >
+          Browse All Services
+        </button>
       </div>
     );
   }
@@ -166,6 +202,18 @@ export default function BookingPage({ params }) {
 
                 <div className="md:col-span-2">
                   <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                    City
+                  </label>
+                  <input
+                    type="text"
+                    {...register("city", { required: "City is required" })}
+                    className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 outline-none"
+                    placeholder="e.g., Mirpur"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                     Full Address / Area
                   </label>
                   <textarea
@@ -182,9 +230,10 @@ export default function BookingPage({ params }) {
 
             <button
               type="submit"
-              className="w-full py-4 rounded-xl bg-purple-600 text-white font-bold text-lg hover:bg-purple-700 transition-all shadow-lg shadow-purple-600/20 hover:shadow-purple-600/40 transform hover:-translate-y-0.5 mt-4"
+              disabled={isSubmitting}
+              className="w-full py-4 rounded-xl bg-purple-600 text-white font-bold text-lg hover:bg-purple-700 transition-all shadow-lg shadow-purple-600/20 hover:shadow-purple-600/40 transform hover:-translate-y-0.5 mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Confirm Booking
+              {isSubmitting ? "Processing..." : "Confirm Booking"}
             </button>
           </form>
         </div>
@@ -196,6 +245,7 @@ export default function BookingPage({ params }) {
                 src={service.image}
                 alt={service.title}
                 fill
+                sizes="(max-width: 768px) 100vw, 33vw"
                 className="object-cover"
               />
               <div className="absolute inset-0 bg-black/40 flex items-end p-4">
