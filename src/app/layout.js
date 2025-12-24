@@ -13,14 +13,16 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" data-theme="light">
+    <html lang="en">
       <body className={inter.className}>
         <AuthProvider>
           <div className="min-h-screen flex flex-col font-sans">
             <Navbar />
-            <main className="flex-grow container mx-auto px-4 py-6">
+
+            <main className="flex-grow container mx-auto px-4 pt-28 pb-12">
               {children}
             </main>
+
             <Footer />
           </div>
         </AuthProvider>
