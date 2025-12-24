@@ -1,31 +1,68 @@
 import Link from "next/link";
-import { FaFacebookF, FaTwitter, FaLinkedinIn } from "react-icons/fa";
+import {
+  FaFacebookF,
+  FaTwitter,
+  FaInstagram,
+  FaLinkedinIn,
+  FaPhoneAlt,
+  FaEnvelope,
+  FaMapMarkerAlt,
+} from "react-icons/fa";
 
 const Footer = () => {
   return (
-    <footer className="bg-neutral-900 text-white pt-16 pb-8">
+    <footer className="bg-gray-50 dark:bg-[#020410] pt-16 pb-8 border-t border-gray-100 dark:border-white/5 transition-colors duration-300">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
           <div className="space-y-4">
-            <h2 className="text-3xl font-bold tracking-tight text-purple-500">
+            <Link
+              href="/"
+              className="text-2xl font-bold text-purple-600 dark:text-purple-400 tracking-tighter"
+            >
               Care.xyz
-            </h2>
-            <p className="text-gray-400 text-sm leading-relaxed pr-4">
-              A reliable and trusted platform connecting families with
-              professional caretakers. We make caregiving easy, secure, and
-              accessible for everyone.
+            </Link>
+            <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
+              Connecting families with trusted caregivers. We provide verified
+              professionals for baby sitting, elderly care, and patient support
+              across the country.
             </p>
+            <div className="flex space-x-4 pt-2">
+              <a
+                href="#"
+                className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center text-purple-600 dark:text-purple-400 hover:bg-purple-600 hover:text-white transition-all"
+              >
+                <FaFacebookF size={14} />
+              </a>
+              <a
+                href="#"
+                className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center text-purple-600 dark:text-purple-400 hover:bg-purple-600 hover:text-white transition-all"
+              >
+                <FaTwitter size={14} />
+              </a>
+              <a
+                href="#"
+                className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center text-purple-600 dark:text-purple-400 hover:bg-purple-600 hover:text-white transition-all"
+              >
+                <FaInstagram size={14} />
+              </a>
+              <a
+                href="#"
+                className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center text-purple-600 dark:text-purple-400 hover:bg-purple-600 hover:text-white transition-all"
+              >
+                <FaLinkedinIn size={14} />
+              </a>
+            </div>
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold mb-6 border-b border-gray-800 pb-2 inline-block">
-              Services
+            <h3 className="font-bold text-gray-900 dark:text-white mb-4">
+              Our Services
             </h3>
-            <ul className="space-y-3 text-sm text-gray-400">
+            <ul className="space-y-2 text-sm">
               <li>
                 <Link
                   href="/service/baby-care"
-                  className="hover:text-purple-400 transition-colors"
+                  className="text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
                 >
                   Baby Sitting
                 </Link>
@@ -33,7 +70,7 @@ const Footer = () => {
               <li>
                 <Link
                   href="/service/elderly-care"
-                  className="hover:text-purple-400 transition-colors"
+                  className="text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
                 >
                   Elderly Care
                 </Link>
@@ -41,86 +78,110 @@ const Footer = () => {
               <li>
                 <Link
                   href="/service/sick-care"
-                  className="hover:text-purple-400 transition-colors"
+                  className="text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
                 >
-                  Special Care
+                  Sick Patient Care
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/service/all"
+                  className="text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+                >
+                  View All Services
                 </Link>
               </li>
             </ul>
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold mb-6 border-b border-gray-800 pb-2 inline-block">
+            <h3 className="font-bold text-gray-900 dark:text-white mb-4">
               Company
             </h3>
-            <ul className="space-y-3 text-sm text-gray-400">
+            <ul className="space-y-2 text-sm">
               <li>
                 <Link
                   href="/about"
-                  className="hover:text-purple-400 transition-colors"
+                  className="text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
                 >
                   About Us
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/login"
-                  className="hover:text-purple-400 transition-colors"
+                  href="/careers"
+                  className="text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
                 >
-                  Login / Register
+                  Become a Caregiver
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/my-bookings"
-                  className="hover:text-purple-400 transition-colors"
+                  href="/privacy"
+                  className="text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
                 >
-                  My Bookings
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/terms"
+                  className="text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+                >
+                  Terms of Service
                 </Link>
               </li>
             </ul>
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold mb-6 border-b border-gray-800 pb-2 inline-block">
-              Contact
+            <h3 className="font-bold text-gray-900 dark:text-white mb-4">
+              Contact Us
             </h3>
-            <div className="text-sm text-gray-400 space-y-3">
-              <p>Dhaka, Bangladesh</p>
-              <p>support@care.xyz</p>
-              <div className="flex gap-4 mt-4">
-                <a
-                  href="#"
-                  className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-purple-600 transition-all"
-                >
-                  <FaFacebookF className="text-white" />
-                </a>
-                <a
-                  href="#"
-                  className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-blue-400 transition-all"
-                >
-                  <FaTwitter className="text-white" />
-                </a>
-                <a
-                  href="#"
-                  className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-blue-700 transition-all"
-                >
-                  <FaLinkedinIn className="text-white" />
-                </a>
-              </div>
-            </div>
+            <ul className="space-y-3 text-sm">
+              <li className="flex items-start gap-3 text-gray-600 dark:text-gray-400">
+                <FaMapMarkerAlt className="mt-1 text-purple-600 dark:text-purple-400" />
+                <span>
+                  House 12, Road 5, Dhanmondi,
+                  <br />
+                  Dhaka 1209, Bangladesh
+                </span>
+              </li>
+              <li className="flex items-center gap-3 text-gray-600 dark:text-gray-400">
+                <FaPhoneAlt className="text-purple-600 dark:text-purple-400" />
+                <span>+880 1712 345 678</span>
+              </li>
+              <li className="flex items-center gap-3 text-gray-600 dark:text-gray-400">
+                <FaEnvelope className="text-purple-600 dark:text-purple-400" />
+                <span>support@care.xyz</span>
+              </li>
+            </ul>
           </div>
         </div>
 
-        <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-gray-500">
-          <p>&copy; {new Date().getFullYear()} Care.IO. All rights reserved.</p>
-          <div className="flex gap-6 mt-4 md:mt-0">
-            <span className="cursor-pointer hover:text-gray-300">
-              Privacy Policy
-            </span>
-            <span className="cursor-pointer hover:text-gray-300">
-              Terms of Service
-            </span>
+        <div className="border-t border-gray-200 dark:border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-sm text-gray-500 dark:text-gray-500">
+            &copy; {new Date().getFullYear()} Care.xyz. All rights reserved.
+          </p>
+          <div className="flex gap-6 text-sm text-gray-500 dark:text-gray-500">
+            <Link
+              href="#"
+              className="hover:text-purple-600 dark:hover:text-purple-400"
+            >
+              Privacy
+            </Link>
+            <Link
+              href="#"
+              className="hover:text-purple-600 dark:hover:text-purple-400"
+            >
+              Terms
+            </Link>
+            <Link
+              href="#"
+              className="hover:text-purple-600 dark:hover:text-purple-400"
+            >
+              Sitemap
+            </Link>
           </div>
         </div>
       </div>

@@ -75,7 +75,8 @@ const servicesData = {
 };
 
 export async function generateMetadata({ params }) {
-  const service = servicesData[params.serviceId];
+  const { serviceId } = await params;
+  const service = servicesData[serviceId];
 
   if (!service) {
     return {
@@ -101,8 +102,9 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export default function ServiceDetailsPage({ params }) {
-  const service = servicesData[params.serviceId];
+export default async function ServiceDetailsPage({ params }) {
+  const { serviceId } = await params;
+  const service = servicesData[serviceId];
 
   if (!service) {
     return notFound();
@@ -118,6 +120,7 @@ export default function ServiceDetailsPage({ params }) {
             fill
             className="object-cover"
             priority
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#020410] via-transparent to-transparent opacity-90"></div>
           <div className="absolute bottom-0 left-0 p-8 md:p-12 w-full">
