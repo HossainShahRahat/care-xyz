@@ -12,26 +12,19 @@ import {
   orderBy,
   getDoc,
 } from "firebase/firestore";
-import {
-  FaCheck,
-  FaTrash,
-  FaClock,
-  FaUser,
-  FaSpinner,
-  FaShieldAlt,
-} from "react-icons/fa";
+import { FaCheck, FaTimes, FaSpinner, FaShieldAlt } from "react-icons/fa";
 
 export default function AdminDashboard() {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const [bookings, setBookings] = useState([]);
-  const [fetching, setFetching] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [list, setList] = useState([]);
+  const [busy, setBusy] = useState(true);
+  const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
 
-    const verifyAndFetch = async () => {
+    const init = async () => {
       try {
         const uRef = doc(db, "users", user.uid);
         const uSnap = await getDoc(uRef);
@@ -41,41 +34,39 @@ export default function AdminDashboard() {
           return;
         }
 
-        setIsAdmin(true);
+        setAuthorized(true);
         const q = query(
           collection(db, "bookings"),
           orderBy("createdAt", "desc")
         );
-        const snap = await getDocs(q);
-        setBookings(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+        const res = await getDocs(q);
+        setList(res.docs.map((d) => ({ id: d.id, ...d.data() })));
       } catch (err) {
         console.log(err);
       }
-      setFetching(false);
+      setBusy(false);
     };
 
-    if (user) verifyAndFetch();
+    if (user) init();
   }, [user, loading, router]);
 
-  const changeStatus = async (id, s) => {
-    const msg =
-      s === "Cancelled"
-        ? "Are you sure you want to cancel this booking?"
-        : `Mark this booking as ${s}?`;
+  const updateStatus = async (id, s) => {
+    const prompt =
+      s === "Cancelled" ? "Discard this booking?" : `Move booking to ${s}?`;
 
-    if (!window.confirm(msg)) return;
+    if (!window.confirm(prompt)) return;
 
     try {
       await updateDoc(doc(db, "bookings", id), { status: s });
-      setBookings((prev) =>
-        prev.map((b) => (b.id === id ? { ...b, status: s } : b))
+      setList((prev) =>
+        prev.map((item) => (item.id === id ? { ...item, status: s } : item))
       );
     } catch (err) {
       console.log(err);
     }
   };
 
-  if (loading || fetching) {
+  if (loading || busy) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <FaSpinner className="animate-spin text-4xl text-purple-600" />
@@ -83,7 +74,7 @@ export default function AdminDashboard() {
     );
   }
 
-  if (!isAdmin) return null;
+  if (!authorized) return null;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
@@ -92,68 +83,77 @@ export default function AdminDashboard() {
         <h1 className="text-3xl font-bold">Admin Panel</h1>
       </div>
 
-      <div className="overflow-x-auto bg-white dark:bg-[#0a0c1a] rounded-2xl border border-gray-100 dark:border-white/5">
+      <div className="overflow-x-auto bg-white dark:bg-[#0a0c1a] rounded-2xl border border-gray-100 dark:border-white/5 shadow-sm">
         <table className="w-full text-left">
           <thead>
-            <tr className="bg-gray-50 dark:bg-white/5 text-gray-500 text-sm uppercase">
-              <th className="p-4">Customer</th>
-              <th className="p-4">Service</th>
-              <th className="p-4">Status</th>
-              <th className="p-4 text-right">Action</th>
+            <tr className="bg-gray-50 dark:bg-white/5 text-gray-500 text-[10px] uppercase tracking-widest">
+              <th className="p-5 font-black">Customer</th>
+              <th className="p-5 font-black">Service</th>
+              <th className="p-5 font-black text-center">Status</th>
+              <th className="p-5 font-black text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-white/5">
-            {bookings.map((b) => (
-              <tr key={b.id} className="text-sm">
-                <td className="p-4">
-                  <div className="font-bold">{b.userName}</div>
-                  <div className="text-xs text-gray-400">{b.userEmail}</div>
+            {list.map((item) => (
+              <tr
+                key={item.id}
+                className="text-sm hover:bg-gray-50/50 dark:hover:bg-white/5 transition-colors"
+              >
+                <td className="p-5">
+                  <div className="font-bold text-gray-900 dark:text-white">
+                    {item.userName}
+                  </div>
+                  <div className="text-xs text-gray-400">{item.userEmail}</div>
                 </td>
-                <td className="p-4">
-                  <div className="font-medium">{b.serviceName}</div>
-                  <div className="text-xs text-gray-500">
-                    {b.duration}h • {b.totalCost}৳
+                <td className="p-5">
+                  <div className="font-medium">{item.serviceName}</div>
+                  <div className="text-xs text-purple-600 font-bold">
+                    {item.totalCost}৳
                   </div>
                 </td>
-                <td className="p-4">
+                <td className="p-5 text-center">
                   <span
-                    className={`px-2 py-1 rounded text-[10px] font-bold ${
-                      b.status === "Pending"
+                    className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${
+                      item.status === "Pending"
                         ? "bg-yellow-100 text-yellow-700"
-                        : b.status === "Confirmed"
+                        : item.status === "Confirmed"
                         ? "bg-green-100 text-green-700"
-                        : b.status === "Completed"
+                        : item.status === "Completed"
                         ? "bg-blue-100 text-blue-700"
-                        : "bg-gray-100 text-gray-600"
+                        : "bg-red-100 text-red-700"
                     }`}
                   >
-                    {b.status}
+                    {item.status}
                   </span>
                 </td>
-                <td className="p-4 text-right">
-                  <div className="flex gap-2 justify-end">
-                    {b.status === "Pending" && (
+                <td className="p-5 text-right">
+                  <div className="flex gap-2 justify-end items-center">
+                    {item.status === "Pending" && (
                       <button
-                        onClick={() => changeStatus(b.id, "Confirmed")}
-                        className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                        onClick={() => updateStatus(item.id, "Confirmed")}
+                        className="p-2.5 bg-green-500/10 text-green-600 rounded-xl hover:bg-green-600 hover:text-white transition-all"
                       >
-                        <FaCheck size={12} />
+                        <FaCheck size={14} />
                       </button>
                     )}
-                    {b.status === "Confirmed" && (
+                    {item.status === "Confirmed" && (
                       <button
-                        onClick={() => changeStatus(b.id, "Completed")}
-                        className="px-3 py-1 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition-colors"
+                        onClick={() => updateStatus(item.id, "Completed")}
+                        className="p-2.5 bg-blue-500/10 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all"
                       >
-                        Complete
+                        <FaCheck size={14} />
                       </button>
                     )}
-                    <button
-                      onClick={() => changeStatus(b.id, "Cancelled")}
-                      className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
-                    >
-                      <FaTrash size={12} />
-                    </button>
+
+                    {item.status !== "Cancelled" &&
+                      item.status !== "Completed" && (
+                        <button
+                          onClick={() => updateStatus(item.id, "Cancelled")}
+                          className="p-2.5 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-600 hover:text-white transition-all"
+                        >
+                          <FaTimes size={14} />
+                        </button>
+                      )}
                   </div>
                 </td>
               </tr>
