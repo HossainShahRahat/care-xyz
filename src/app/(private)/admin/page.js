@@ -33,10 +33,10 @@ export default function AdminDashboard() {
 
     const verifyAndFetch = async () => {
       try {
-        const userRef = doc(db, "users", user.uid);
-        const userSnap = await getDoc(userRef);
+        const uRef = doc(db, "users", user.uid);
+        const uSnap = await getDoc(uRef);
 
-        if (!userSnap.exists() || userSnap.data().role !== "admin") {
+        if (!uSnap.exists() || uSnap.data().role !== "admin") {
           router.push("/");
           return;
         }
@@ -58,6 +58,13 @@ export default function AdminDashboard() {
   }, [user, loading, router]);
 
   const changeStatus = async (id, s) => {
+    const msg =
+      s === "Cancelled"
+        ? "Are you sure you want to cancel this booking?"
+        : `Mark this booking as ${s}?`;
+
+    if (!window.confirm(msg)) return;
+
     try {
       await updateDoc(doc(db, "bookings", id), { status: s });
       setBookings((prev) =>
@@ -115,6 +122,8 @@ export default function AdminDashboard() {
                         ? "bg-yellow-100 text-yellow-700"
                         : b.status === "Confirmed"
                         ? "bg-green-100 text-green-700"
+                        : b.status === "Completed"
+                        ? "bg-blue-100 text-blue-700"
                         : "bg-gray-100 text-gray-600"
                     }`}
                   >
@@ -126,14 +135,22 @@ export default function AdminDashboard() {
                     {b.status === "Pending" && (
                       <button
                         onClick={() => changeStatus(b.id, "Confirmed")}
-                        className="p-2 bg-green-600 text-white rounded-lg"
+                        className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                       >
                         <FaCheck size={12} />
                       </button>
                     )}
+                    {b.status === "Confirmed" && (
+                      <button
+                        onClick={() => changeStatus(b.id, "Completed")}
+                        className="px-3 py-1 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        Complete
+                      </button>
+                    )}
                     <button
                       onClick={() => changeStatus(b.id, "Cancelled")}
-                      className="p-2 bg-red-100 text-red-600 rounded-lg"
+                      className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
                     >
                       <FaTrash size={12} />
                     </button>
